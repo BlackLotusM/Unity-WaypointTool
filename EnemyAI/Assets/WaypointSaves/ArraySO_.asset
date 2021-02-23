@@ -12,4 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fad039d13df78143b4b21aeaa7cd9d1, type: 3}
   m_Name: ArraySO_
   m_EditorClassIdentifier: 
-  itemList: []
+  itemList:
+  - properties:
+    - name: test
+      value: test
+  - properties: []

@@ -12,7 +12,7 @@ public class WaypointWindow : EditorWindow
     private SerializedObject so = null;
 
 
-    [MenuItem("Window/ItemObjectDatabase Editor")]
+    [MenuItem("Window/Waypoint Tool")]
     public static void OpenWindow()
     {
         ShowWindow(Selection.activeObject as ArraySO);
@@ -20,7 +20,7 @@ public class WaypointWindow : EditorWindow
 
     public static void ShowWindow(ArraySO itemDatabaseObject)
     {
-        var window = GetWindow<WaypointWindow>("InventoryEditor");
+        var window = GetWindow<WaypointWindow>("WaypointWindow");
         window.SelectDatabaseObject(itemDatabaseObject);
     }
 
