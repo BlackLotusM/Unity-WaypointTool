@@ -7,10 +7,16 @@ using UnityEditorInternal;
 
 public class WaypointWindow : EditorWindow
 {
+    GUIStyle mystule = new GUIStyle();
+
     private ReorderableList m_itemList = null;
     private ReorderableList m_propertiesList = null;
     private SerializedObject so = null;
 
+    int count;
+    string[] text = new string[] { "Load by name", "Load by file" };
+    private string fileName;
+    Object so2;
 
     [MenuItem("Window/Waypoint Tool")]
     public static void OpenWindow()
@@ -43,15 +49,55 @@ public class WaypointWindow : EditorWindow
             m_itemList.onAddCallback += AddItem;
             m_itemList.onRemoveCallback += RemoveItem;
             m_itemList.onSelectCallback += SelectItem;
-            m_itemList.drawHeaderCallback = (Rect rect) => { EditorGUI.LabelField(rect, "Items"); };
+            m_itemList.drawHeaderCallback = (Rect rect) => { EditorGUI.LabelField(rect, "Waypoints"); };
             so = new SerializedObject(itemDatabaseObject);
         }
         m_propertiesList = null;
         Repaint();
     }
-
+    
+    private void Update()
+    {
     void OnGUI()
     {
+        
+
+        GUILayout.BeginHorizontal("box");
+        GUILayout.Label("Create new", mystule);
+        fileName = EditorGUILayout.TextField("Name: ", fileName);
+
+        if (GUILayout.Button("Create"))
+        {
+            if(fileName != "")
+            {
+                GUILayout.Space(30);
+                var myType = AssetDatabase.LoadAssetAtPath("Assets/WayPointSaves/"+fileName+".asset", typeof(ArraySO)) as ArraySO;
+                if (myType == null) 
+                { 
+                    Debug.Log("nothing");
+                    this.ShowNotification(new GUIContent("New asset has been created"));
+                    ArraySO asset = ScriptableObject.CreateInstance<ArraySO>();
+                    if (Directory.Exists("Assets/WayPointSaves/"))
+                    {
+                        AssetDatabase.CreateAsset(asset, "Assets/WayPointSaves/" + fileName + ".asset");
+                        AssetDatabase.SaveAssets();
+                        Selection.activeObject = asset;
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory("Assets/WayPointSaves/");
+                        AssetDatabase.CreateAsset(asset, "Assets/WayPointSaves/" + fileName + ".asset");
+                        AssetDatabase.SaveAssets();
+                        Selection.activeObject = asset;
+                    }
+                }
+                else 
+                {
+                    this.ShowNotification(new GUIContent("Already existed, loaded asset"));
+                    Selection.activeObject = myType;
+                }  
+            }
+        }
         if (so != null && m_itemList != null)
         {
             so.Update();
@@ -61,6 +107,22 @@ public class WaypointWindow : EditorWindow
                 m_propertiesList.DoLayoutList();
             }
             so.ApplyModifiedProperties();
+        }
+        GUILayout.Space(20); 
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal("box");
+        EditorGUILayout.LabelField("Load existing", mystule);
+        
+        count = GUILayout.SelectionGrid(count, text, 2, EditorStyles.radioButton);
+        GUILayout.EndHorizontal();
+
+        if(count == 0)
+        {
+            fileName = EditorGUILayout.TextField("Name: ", fileName);
+        }
+        else
+        {
+            so2 = EditorGUILayout.ObjectField(so2, typeof(ArraySO), true);
         }
     }
 
@@ -128,31 +190,5 @@ public class WaypointWindow : EditorWindow
                     propertySerializedProperty.FindPropertyRelative("value").stringValue);
             }
         }
-    }
-
-    [MenuItem("Assets/Create/ItemObjectDatabase")]
-    public static void CreateAsset()
-    {
-        CreateAsset<ArraySO>();
-    }
-
-    public static void CreateAsset<T>() where T : ScriptableObject
-    {
-        T asset = ScriptableObject.CreateInstance<T>();
-        string path = AssetDatabase.GetAssetPath(Selection.activeObject);
-        if (path == "")
-        {
-            path = "Assets";
-        }
-        else if (Path.GetExtension(path) != "")
-        {
-            path = path.Replace(Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
-        }
-        string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + typeof(T).ToString() + ".asset");
-        AssetDatabase.CreateAsset(asset, assetPathAndName);
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-        EditorUtility.FocusProjectWindow();
-        Selection.activeObject = asset;
     }
 }
