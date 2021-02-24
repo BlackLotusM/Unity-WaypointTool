@@ -58,8 +58,13 @@ public class WaypointWindow : EditorWindow
     
     private void Update()
     {
+        
+    }
     void OnGUI()
     {
+        mystule.fontSize = 18;
+        mystule.normal.textColor = Color.white;
+        mystule.hover.textColor = Color.red;
         
 
         GUILayout.BeginHorizontal("box");
