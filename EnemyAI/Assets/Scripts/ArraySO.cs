@@ -4,22 +4,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[System.Serializable]
 [CreateAssetMenu(fileName = "ArraySO_", menuName = "Scrip/ArraySO")]
+[Serializable]
 public class ArraySO : ScriptableObject
 {
     [Serializable]
-    public class Property
+    public class Waypoint
     {
-        public string name = string.Empty;
-        public string value = string.Empty;
+        public string name = "Waypoint";
+        public Vector3 Coords;
     }
 
-    [Serializable]
-    public class Item
-    {
-        public List<Property> properties = new List<Property>();
-    }
-
-    public List<Item> itemList = new List<Item>();
+    public List<Waypoint> WaypointList = new List<Waypoint>();
 }

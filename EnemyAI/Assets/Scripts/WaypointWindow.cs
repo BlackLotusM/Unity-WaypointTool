@@ -8,20 +8,23 @@ using UnityEditorInternal;
 public class WaypointWindow : EditorWindow
 {
     GUIStyle mystule = new GUIStyle();
-
+    public GameObject gizmo;
     private ReorderableList m_itemList = null;
-    private ReorderableList m_propertiesList = null;
     private SerializedObject so = null;
+    public GizmosDrawer gz;
 
     int count;
     string[] text = new string[] { "Load by name", "Load by file" };
     private string fileName;
-    Object so2;
+    ArraySO so2;
+    Object so2Old;
+    GizmosDrawer displayObject;
 
     [MenuItem("Window/Waypoint Tool")]
-    public static void OpenWindow()
+    public static void Init()
     {
-        ShowWindow(Selection.activeObject as ArraySO);
+        WaypointWindow window = (WaypointWindow)EditorWindow.GetWindow(typeof(WaypointWindow));
+        window.Show();
     }
 
     public static void ShowWindow(ArraySO itemDatabaseObject)
@@ -32,8 +35,8 @@ public class WaypointWindow : EditorWindow
 
     void OnSelectionChange()
     {
-        var itemDatabaseObject = Selection.activeObject as ArraySO;
-        if (itemDatabaseObject != null) SelectDatabaseObject(itemDatabaseObject);
+        //var itemDatabaseObject = Selection.activeObject as ArraySO;
+        //if (itemDatabaseObject != null) SelectDatabaseObject(itemDatabaseObject);
     }
 
     void SelectDatabaseObject(ArraySO itemDatabaseObject)
@@ -45,40 +48,56 @@ public class WaypointWindow : EditorWindow
         }
         else
         {
-            m_itemList = new ReorderableList(itemDatabaseObject.itemList, typeof(ArraySO.Item), true, true, true, true);
+            m_itemList = new ReorderableList(itemDatabaseObject.WaypointList, typeof(ArraySO), true, true, true, true);
+            
             m_itemList.onAddCallback += AddItem;
-            m_itemList.onRemoveCallback += RemoveItem;
             m_itemList.onSelectCallback += SelectItem;
+            m_itemList.onRemoveCallback += RemoveItem;
             m_itemList.drawHeaderCallback = (Rect rect) => { EditorGUI.LabelField(rect, "Waypoints"); };
+            m_itemList.drawElementCallback =
+                (Rect rect, int index, bool isActive, bool isFocused) =>
+                {
+                    EditorGUI.LabelField(new Rect(rect.x, rect.y, 100, EditorGUIUtility.singleLineHeight), itemDatabaseObject.WaypointList[index].name);
+                    EditorGUI.Vector3Field(new Rect(rect.x + 100, rect.y, 200, EditorGUIUtility.singleLineHeight), "", itemDatabaseObject.WaypointList[index].Coords);
+                    if(GUI.Button(new Rect(rect.x + 310, rect.y, 50, EditorGUIUtility.singleLineHeight), "Edit"))
+                    {
+                        Debug.Log(itemDatabaseObject.WaypointList[index].Coords.ToString());
+                        displayObject.sel(index);
+                        //Selection.activeGameObject = gz.Spawned[index];
+                    }
+                };
+
             so = new SerializedObject(itemDatabaseObject);
+            SerializedProperty t =  so.FindProperty("m_Name");
+            t.stringValue = "test";
+            //so.FindProperty("_name").stringValue = "r";
         }
-        m_propertiesList = null;
         Repaint();
     }
-    
-    private void Update()
-    {
-        
-    }
+
     void OnGUI()
     {
+        if (displayObject == null)
+        {
+            displayObject = FindObjectOfType<GizmosDrawer>().gameObject.GetComponent<GizmosDrawer>();
+        }
         mystule.fontSize = 18;
         mystule.normal.textColor = Color.white;
         mystule.hover.textColor = Color.red;
-        
 
-        GUILayout.BeginHorizontal("box");
+        GUILayout.BeginVertical("box");
         GUILayout.Label("Create new", mystule);
         fileName = EditorGUILayout.TextField("Name: ", fileName);
+        GUILayout.Space(10);
 
         if (GUILayout.Button("Create"))
         {
-            if(fileName != "")
+            if (fileName != "")
             {
-                GUILayout.Space(30);
-                var myType = AssetDatabase.LoadAssetAtPath("Assets/WayPointSaves/"+fileName+".asset", typeof(ArraySO)) as ArraySO;
-                if (myType == null) 
-                { 
+                GUILayout.Space(10);
+                var myType = AssetDatabase.LoadAssetAtPath("Assets/WayPointSaves/" + fileName + ".asset", typeof(ArraySO)) as ArraySO;
+                if (myType == null)
+                {
                     Debug.Log("nothing");
                     this.ShowNotification(new GUIContent("New asset has been created"));
                     ArraySO asset = ScriptableObject.CreateInstance<ArraySO>();
@@ -86,114 +105,107 @@ public class WaypointWindow : EditorWindow
                     {
                         AssetDatabase.CreateAsset(asset, "Assets/WayPointSaves/" + fileName + ".asset");
                         AssetDatabase.SaveAssets();
-                        Selection.activeObject = asset;
                     }
                     else
                     {
                         Directory.CreateDirectory("Assets/WayPointSaves/");
                         AssetDatabase.CreateAsset(asset, "Assets/WayPointSaves/" + fileName + ".asset");
                         AssetDatabase.SaveAssets();
-                        Selection.activeObject = asset;
                     }
+                    so2 = asset;
+                    SelectDatabaseObject(so2 as ArraySO);
                 }
-                else 
+                else
                 {
                     this.ShowNotification(new GUIContent("Already existed, loaded asset"));
-                    Selection.activeObject = myType;
-                }  
+                    so2 = myType;
+                    SelectDatabaseObject(so2 as ArraySO);
+                }
+            }
+            else {
+                this.ShowNotification(new GUIContent("File name can't be empty"));
             }
         }
-        if (so != null && m_itemList != null)
-        {
-            so.Update();
-            m_itemList.DoLayoutList();
-            if (m_propertiesList != null)
-            {
-                m_propertiesList.DoLayoutList();
-            }
-            so.ApplyModifiedProperties();
-        }
-        GUILayout.Space(20); 
-        GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal("box");
+
+        GUILayout.Space(10); 
+        GUILayout.EndVertical();
+        GUILayout.BeginVertical("box");
         EditorGUILayout.LabelField("Load existing", mystule);
         
         count = GUILayout.SelectionGrid(count, text, 2, EditorStyles.radioButton);
-        GUILayout.EndHorizontal();
-
+        
         if(count == 0)
         {
             fileName = EditorGUILayout.TextField("Name: ", fileName);
         }
         else
         {
-            so2 = EditorGUILayout.ObjectField(so2, typeof(ArraySO), true);
+            so2 = (ArraySO)EditorGUILayout.ObjectField("File", so2, typeof(ArraySO), true);
+            
+        }
+        GUILayout.Space(10);
+        if (GUILayout.Button("Load"))
+        {
+            ArraySO myType = AssetDatabase.LoadAssetAtPath("Assets/WayPointSaves/" + fileName + ".asset", typeof(ArraySO)) as ArraySO;
+            if (myType == null)
+            {
+                this.ShowNotification(new GUIContent("This object does not yet exist"));
+                so2 = null;
+            }
+            else
+            {
+                so2 = myType;
+                SelectDatabaseObject(so2 as ArraySO);
+            }
+            
+        }
+        GUILayout.Space(10);
+        GUILayout.EndVertical();
+        if (so != null)
+        {
+            GUILayout.Label("Currently active: " + so2.name, mystule);
+        }
+        else
+        {
+            GUILayout.Label("Currently active: None" , mystule);
+        }
+
+        displayObject = (GizmosDrawer)EditorGUILayout.ObjectField("File", displayObject, typeof(GameObject), true);
+
+        if (so != null && m_itemList != null)
+        {
+            so.Update();
+            m_itemList.DoLayoutList();
+            so.ApplyModifiedProperties();
+        }
+        if (so2Old != so2)
+        {
+            SelectDatabaseObject(so2);
+            so2Old = so2;
+        }
+
+        if (so2 != null)
+        {
+            displayObject.ar = so2;
+            EditorUtility.SetDirty(so2);
         }
     }
 
     void AddItem(ReorderableList itemList)
     {
-        // When we add an item, select that item:
-        itemList.list.Add(new ArraySO.Item());
-        itemList.index = itemList.count - 1;
-        SelectItem(itemList);
+        itemList.list.Add(new ArraySO.Waypoint());
+        itemList.index = itemList.count - 1;   
     }
 
     void RemoveItem(ReorderableList itemList)
     {
         // When we remove an item, clear the properties list:
         ReorderableList.defaultBehaviours.DoRemoveButton(itemList);
-        m_propertiesList = null;
         Repaint();
     }
 
     void SelectItem(ReorderableList itemList)
     {
-        // We when select an item, init the properties list for that item:
-        if (0 <= itemList.index && itemList.index < itemList.count)
-        {
-            var item = itemList.list[itemList.index] as ArraySO.Item;
-            if (item != null)
-            {
-                m_propertiesList = new ReorderableList(item.properties, typeof(string), true, true, true, true);
-                m_propertiesList.drawElementCallback = DrawProperty;
-            }
-            Repaint();
-        }
-    }
-
-    void DrawProperty(Rect rect, int index, bool isActive, bool isFocused)
-    {
-        // Added tons of debugging to help if you have issues:
-        var itemListSerializedProperty = so.FindProperty("itemList");
-        if (itemListSerializedProperty == null) { Debug.Log("itemList is null!"); return; }
-        if (!itemListSerializedProperty.isArray) { Debug.Log("itemList is not an array!"); return; }
-        if (!(0 <= m_itemList.index && m_itemList.index < itemListSerializedProperty.arraySize)) { Debug.Log("itemList[" + m_itemList.index + "] is outside array bounds!"); return; }
-        if (0 <= m_itemList.index && m_itemList.index < itemListSerializedProperty.arraySize)
-        {
-            var itemSerializedProperty = itemListSerializedProperty.GetArrayElementAtIndex(m_itemList.index);
-            if (itemSerializedProperty == null) { Debug.Log("itemSerializedProperty[" + m_itemList.index + "] is null!"); return; }
-
-            var propertiesListSerializedProperty = itemSerializedProperty.FindPropertyRelative("properties");
-            if (propertiesListSerializedProperty == null) { Debug.Log("propertiesListSerializedProperty is null!"); return; }
-            if (!propertiesListSerializedProperty.isArray) { Debug.Log("propertiesListSerializedProperty is not an array!"); return; }
-
-            if (0 <= index && index < propertiesListSerializedProperty.arraySize)
-            {
-                var propertySerializedProperty = propertiesListSerializedProperty.GetArrayElementAtIndex(index);
-                if (propertySerializedProperty == null) { Debug.Log("propertySerializedProperty[" + index + "] is null!"); return; }
-
-                // If you have a custom property drawer, you can use PropertyField:
-                //---EditorGUI.PropertyField(rect, propertySerializedProperty);
-
-                // I didn't bother with one, so I just use TextField:
-                propertySerializedProperty.FindPropertyRelative("name").stringValue =
-                    EditorGUI.TextField(new Rect(rect.x, rect.y, rect.width / 2, rect.height),
-                    propertySerializedProperty.FindPropertyRelative("name").stringValue);
-                propertySerializedProperty.FindPropertyRelative("value").stringValue =
-                    EditorGUI.TextField(new Rect(rect.x + rect.width / 2, rect.y, rect.width / 2, rect.height),
-                    propertySerializedProperty.FindPropertyRelative("value").stringValue);
-            }
-        }
+        displayObject.sel(itemList.index);
     }
 }

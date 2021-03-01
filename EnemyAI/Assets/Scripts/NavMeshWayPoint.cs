@@ -11,6 +11,7 @@ public class NavMeshWayPoint : MonoBehaviour
     public List<GameObject> waypoints;
     private GameObject target;
     private int numberOfWayPoints;
+    
 
 
     //private void Update()
