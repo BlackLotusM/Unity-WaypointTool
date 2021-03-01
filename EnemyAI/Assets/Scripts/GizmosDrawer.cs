@@ -5,14 +5,14 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
+
 public class GizmosDrawer : MonoBehaviour
 {
-    public ArraySO ar;
-    public ArraySO oldAr;
-
+    public ArraySO loadedArray;
+    private ArraySO oldAr;
     public GameObject gizmoPref;
 
-    public List<GameObject> Spawned;
+    private List<GameObject> Spawned;
 
     void OnSceneGUI()
     {
@@ -23,14 +23,33 @@ public class GizmosDrawer : MonoBehaviour
     }
     public void sel(int i)
     {
+        
         Selection.activeGameObject = Spawned[i];
     }
+
+    [InitializeOnLoadMethod]
+    private static void InitializeOnLoad()
+    {
+        EditorApplication.update += OnUpdate;
+    }
+
+    private static void OnUpdate()
+    {
+        //
+        if (GameObject.FindObjectOfType<GizmosDrawer>() != null)
+        {
+            GizmosDrawer myComponent = GameObject.FindObjectOfType<GizmosDrawer>().GetComponent<GizmosDrawer>();
+            if (myComponent == GameObject.FindObjectOfType<GizmosDrawer>().GetComponent<GizmosDrawer>())
+            {
+                UnityEditorInternal.InternalEditorUtility.SetIsInspectorExpanded(myComponent, true);
+            }
+        }
+    }
+
     public void OnDrawGizmos()
     {
-        if (oldAr != ar)
+        if (oldAr != loadedArray)
         {
-            //Checks For array change
-            Debug.Log("Change");
             deleteObjectList();
         }
 
@@ -42,54 +61,51 @@ public class GizmosDrawer : MonoBehaviour
             }
         }
 
-        if(Spawned.Count > ar.WaypointList.Count)
+        if(Spawned.Count > loadedArray.WaypointList.Count)
         {
             deleteObjectList();
         }
 
-        for (int i = Spawned.Count; i < ar.WaypointList.Count; i++)
+        for (int i = Spawned.Count; i < loadedArray.WaypointList.Count; i++)
         {
-            GameObject test = Instantiate(gizmoPref, ar.WaypointList[i].Coords, Quaternion.identity);
-            test.name = ar.WaypointList[i].name;
+            GameObject test = Instantiate(gizmoPref, loadedArray.WaypointList[i].Coords, Quaternion.identity);
+            test.name = loadedArray.WaypointList[i].name;
             Spawned.Add(test);
         }
 
 
-        for (var i = 0; i < ar.WaypointList.Count; i++)
+        for (var i = 0; i < loadedArray.WaypointList.Count; i++)
         {
-            if (Spawned[i].name != ar.WaypointList[i].name)
+            if (Spawned[i].name != loadedArray.WaypointList[i].name)
             {
                 deleteObjectList();
                 return;
             }
         }
 
-        for (var i = 1; i < ar.WaypointList.Count; i++)
+        for (var i = 1; i < loadedArray.WaypointList.Count; i++)
         {
-            Debug.DrawLine(ar.WaypointList[i - 1].Coords, ar.WaypointList[i].Coords, Color.red);
+            Debug.DrawLine(loadedArray.WaypointList[i - 1].Coords, loadedArray.WaypointList[i].Coords, Color.red);
         }
 
         for (int i = 0; i < Spawned.Count; i++)
         {
-            if (ar.WaypointList[i] == null)
+            if (loadedArray.WaypointList[i] != null)
             {
-
-            }
-            else
-            {
-                ar.WaypointList[i].Coords = Spawned[i].transform.position;
+                loadedArray.WaypointList[i].Coords = Spawned[i].transform.position;
+                SceneView.RepaintAll();
             }
         }
 
         
 
-        if(ar.WaypointList.Count != Spawned.Count)
+        if(loadedArray.WaypointList.Count != Spawned.Count)
         {
             deleteObjectList();
         }
 
-        EditorUtility.SetDirty(ar);
-        oldAr = ar;
+        EditorUtility.SetDirty(loadedArray);
+        oldAr = loadedArray;
     }
 
     private void deleteObjectList()

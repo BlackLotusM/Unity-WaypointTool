@@ -33,12 +33,6 @@ public class WaypointWindow : EditorWindow
         window.SelectDatabaseObject(itemDatabaseObject);
     }
 
-    void OnSelectionChange()
-    {
-        //var itemDatabaseObject = Selection.activeObject as ArraySO;
-        //if (itemDatabaseObject != null) SelectDatabaseObject(itemDatabaseObject);
-    }
-
     void SelectDatabaseObject(ArraySO itemDatabaseObject)
     {
         if (itemDatabaseObject == null)
@@ -157,7 +151,8 @@ public class WaypointWindow : EditorWindow
                 so2 = myType;
                 SelectDatabaseObject(so2 as ArraySO);
             }
-            
+            displayObject.hideFlags = HideFlags.None;
+
         }
         GUILayout.Space(10);
         GUILayout.EndVertical();
@@ -171,7 +166,7 @@ public class WaypointWindow : EditorWindow
         }
 
         displayObject = (GizmosDrawer)EditorGUILayout.ObjectField("File", displayObject, typeof(GameObject), true);
-
+        
         if (so != null && m_itemList != null)
         {
             so.Update();
@@ -186,7 +181,7 @@ public class WaypointWindow : EditorWindow
 
         if (so2 != null)
         {
-            displayObject.ar = so2;
+            displayObject.loadedArray = so2;
             EditorUtility.SetDirty(so2);
         }
     }
