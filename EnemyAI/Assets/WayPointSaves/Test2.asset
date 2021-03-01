@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Test2
   m_EditorClassIdentifier: 
   WaypointList:
-  - name: 12
-    Coords: {x: -3.44, y: 7.43, z: -7.69}
   - name: 21
-    Coords: {x: -9.96, y: 7.94, z: 5.94}
+    Coords: {x: 1.41, y: 9.36, z: -4.1}
   - name: 2222
-    Coords: {x: 3.49, y: 7.29, z: -0.27}
+    Coords: {x: 3.49, y: 6.61, z: -0.27}
   - name: 222
-    Coords: {x: -6.47, y: 0.1, z: 13.29}
+    Coords: {x: -2.03, y: 11.56, z: 13.29}
+  - name: 12
+    Coords: {x: -3.44, y: 7.06, z: -7.69}
