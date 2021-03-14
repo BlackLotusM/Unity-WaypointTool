@@ -3,7 +3,9 @@ guid: 5e58ef3662aa0164583fa9e9cba0fe6c
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - loadedArray: {instanceID: 0}
+  - gizmoPref: {fileID: 9222450737171191079, guid: a6907dd6beb59e847902e7b6a95caef6, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

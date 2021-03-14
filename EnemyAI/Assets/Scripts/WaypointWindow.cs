@@ -1,18 +1,20 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditorInternal;
+using UnityEngine.UIElements;
 
 public class WaypointWindow : EditorWindow
 {
     GUIStyle mystule = new GUIStyle();
-    public GameObject gizmo;
     private ReorderableList m_itemList = null;
     private SerializedObject so = null;
     public GizmosDrawer gz;
-
+    public GameObject gizmoDrawPref;
+    bool loop;
+    bool follow;
+    int countName;
     int count;
     string[] text = new string[] { "Load by name", "Load by file" };
     private string fileName;
@@ -27,12 +29,66 @@ public class WaypointWindow : EditorWindow
         window.Show();
     }
 
+    void OnEnable()
+    {
+        SceneView.duringSceneGui += SceneGUI;
+    }
+
+    void SceneGUI(SceneView sceneView)
+    {
+        try
+        {
+            var e = Event.current;
+            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.P)
+            {
+                e.Use();
+                DrawSphereGizmo currentDrawGizmo = Selection.activeGameObject.GetComponent<DrawSphereGizmo>();
+                currentDrawGizmo.followMouse = !currentDrawGizmo.followMouse;
+                Debug.Log("Right Click");
+            }
+
+            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.N)
+            {
+                e.Use();
+                AddItem(m_itemList);
+                displayObject.Redo();
+                SelectItemNumber(m_itemList.index);
+            }
+
+            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.D)
+            {
+                e.Use();
+                if (Selection.activeGameObject.GetComponent<DrawSphereGizmo>())
+                {
+                    DubItem(m_itemList, Selection.activeGameObject.transform.position);
+                    displayObject.Redo();
+                    SelectItemNumber(m_itemList.index);
+                }
+            }
+
+            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Delete)
+            {
+                e.Use();
+                if (Selection.activeGameObject.GetComponent<DrawSphereGizmo>())
+                {
+                    DubItem(m_itemList, Selection.activeGameObject.transform.position);
+                    displayObject.Redo();
+                    SelectItemNumber(m_itemList.index);
+                }
+            }
+        }
+        catch
+        {
+            Debug.Log("test");
+        } 
+    }
+
     public static void ShowWindow(ArraySO itemDatabaseObject)
     {
         var window = GetWindow<WaypointWindow>("WaypointWindow");
         window.SelectDatabaseObject(itemDatabaseObject);
     }
-
+    
     void SelectDatabaseObject(ArraySO itemDatabaseObject)
     {
         if (itemDatabaseObject == null)
@@ -42,8 +98,7 @@ public class WaypointWindow : EditorWindow
         }
         else
         {
-            m_itemList = new ReorderableList(itemDatabaseObject.WaypointList, typeof(ArraySO), true, true, true, true);
-            
+            m_itemList = new ReorderableList(itemDatabaseObject.WaypointList, typeof(ArraySO), true, true, true, true);   
             m_itemList.onAddCallback += AddItem;
             m_itemList.onSelectCallback += SelectItem;
             m_itemList.onRemoveCallback += RemoveItem;
@@ -51,36 +106,45 @@ public class WaypointWindow : EditorWindow
             m_itemList.drawElementCallback =
                 (Rect rect, int index, bool isActive, bool isFocused) =>
                 {
-                    EditorGUI.LabelField(new Rect(rect.x, rect.y, 100, EditorGUIUtility.singleLineHeight), itemDatabaseObject.WaypointList[index].name);
-                    EditorGUI.Vector3Field(new Rect(rect.x + 100, rect.y, 200, EditorGUIUtility.singleLineHeight), "", itemDatabaseObject.WaypointList[index].Coords);
-                    if(GUI.Button(new Rect(rect.x + 310, rect.y, 50, EditorGUIUtility.singleLineHeight), "Edit"))
+                    EditorGUI.LabelField(new Rect(rect.x, rect.y, 100, EditorGUIUtility.singleLineHeight), "name: ");
+                    try
                     {
-                        Debug.Log(itemDatabaseObject.WaypointList[index].Coords.ToString());
-                        displayObject.sel(index);
-                        //Selection.activeGameObject = gz.Spawned[index];
+                        itemDatabaseObject.WaypointList[index].name = EditorGUI.TextField(new Rect(rect.x + 45, rect.y, 100, EditorGUIUtility.singleLineHeight), itemDatabaseObject.WaypointList[index].name);
+                        displayObject.Spawned[index].gameObject.transform.position = EditorGUI.Vector3Field(new Rect(rect.x + 160, rect.y, 200, EditorGUIUtility.singleLineHeight), "", itemDatabaseObject.WaypointList[index].Coords);
+                        
                     }
+                    catch { }
                 };
 
             so = new SerializedObject(itemDatabaseObject);
-            SerializedProperty t =  so.FindProperty("m_Name");
-            t.stringValue = "test";
-            //so.FindProperty("_name").stringValue = "r";
         }
         Repaint();
     }
-
+    Vector2 scrollPos;
     void OnGUI()
     {
+        scrollPos = EditorGUILayout.BeginScrollView(scrollPos,
+                                                      false,
+                                                      false);
+        GUILayout.BeginVertical();
         if (displayObject == null)
         {
-            displayObject = FindObjectOfType<GizmosDrawer>().gameObject.GetComponent<GizmosDrawer>();
+            try
+            {
+                displayObject = FindObjectOfType<GizmosDrawer>().gameObject.GetComponent<GizmosDrawer>();
+            }
+            catch
+            {
+                Instantiate(gizmoDrawPref);
+            }
         }
+
         mystule.fontSize = 18;
         mystule.normal.textColor = Color.white;
         mystule.hover.textColor = Color.red;
 
-        GUILayout.BeginVertical("box");
         GUILayout.Label("Create new", mystule);
+
         fileName = EditorGUILayout.TextField("Name: ", fileName);
         GUILayout.Space(10);
 
@@ -122,8 +186,8 @@ public class WaypointWindow : EditorWindow
         }
 
         GUILayout.Space(10); 
-        GUILayout.EndVertical();
-        GUILayout.BeginVertical("box");
+        //GUILayout.EndVertical();
+        //GUILayout.BeginVertical("box");
         EditorGUILayout.LabelField("Load existing", mystule);
         
         count = GUILayout.SelectionGrid(count, text, 2, EditorStyles.radioButton);
@@ -137,6 +201,7 @@ public class WaypointWindow : EditorWindow
             so2 = (ArraySO)EditorGUILayout.ObjectField("File", so2, typeof(ArraySO), true);
             
         }
+
         GUILayout.Space(10);
         if (GUILayout.Button("Load"))
         {
@@ -155,24 +220,26 @@ public class WaypointWindow : EditorWindow
 
         }
         GUILayout.Space(10);
-        GUILayout.EndVertical();
-        if (so != null)
+        //GUILayout.EndVertical();
+        if (so2 != null)
         {
             GUILayout.Label("Currently active: " + so2.name, mystule);
+            loop = GUILayout.Toggle(loop, "Loop waypoints");
+            displayObject.loop = loop;
+            displayObject.follow = follow;
         }
         else
         {
             GUILayout.Label("Currently active: None" , mystule);
         }
 
-        displayObject = (GizmosDrawer)EditorGUILayout.ObjectField("File", displayObject, typeof(GameObject), true);
-        
         if (so != null && m_itemList != null)
         {
             so.Update();
             m_itemList.DoLayoutList();
             so.ApplyModifiedProperties();
         }
+
         if (so2Old != so2)
         {
             SelectDatabaseObject(so2);
@@ -184,12 +251,61 @@ public class WaypointWindow : EditorWindow
             displayObject.loadedArray = so2;
             EditorUtility.SetDirty(so2);
         }
+        else
+        {
+            if (displayObject != null)
+            {
+                displayObject.loadedArray = null;
+            }
+        }
+
+        GUILayout.EndVertical();
+
+        EditorGUILayout.EndScrollView();
+
     }
 
-    void AddItem(ReorderableList itemList)
+    void AddItem(ReorderableList itemList)// as ArraySO)
     {
-        itemList.list.Add(new ArraySO.Waypoint());
-        itemList.index = itemList.count - 1;   
+        countName = 0;
+        ArraySO.Waypoint t = new ArraySO.Waypoint();
+        t.name = "Waypoint" + (countName);
+
+        if (so2.WaypointList.Any(innerList => innerList.name.Contains(t.name)))
+        {
+            while (so2.WaypointList.Any(innerList => innerList.name.Contains(t.name)))
+            {
+                t.name = "Waypoint" + countName;
+                countName++;
+            }
+        }
+
+        itemList.list.Add(t);
+        itemList.index = itemList.count - 1;
+        GUILayout.EndScrollView();
+        Repaint();
+    }
+
+    void DubItem(ReorderableList itemList, Vector3 pos)// as ArraySO)
+    {
+        countName = 0;
+        ArraySO.Waypoint t = new ArraySO.Waypoint();
+        t.name = "Waypoint" + (countName);
+        t.Coords = pos;
+
+        if (so2.WaypointList.Any(innerList => innerList.name.Contains(t.name)))
+        {
+            while (so2.WaypointList.Any(innerList => innerList.name.Contains(t.name)))
+            {
+                t.name = "Waypoint" + countName;
+                countName++;
+            }
+        }
+
+        itemList.list.Add(t);
+        itemList.index = itemList.count - 1;
+        GUILayout.EndScrollView();
+        Repaint();
     }
 
     void RemoveItem(ReorderableList itemList)
@@ -202,5 +318,12 @@ public class WaypointWindow : EditorWindow
     void SelectItem(ReorderableList itemList)
     {
         displayObject.sel(itemList.index);
+        Repaint();
+    }
+
+    void SelectItemNumber(int itemList)
+    {
+        displayObject.sel(itemList);
+        Repaint();
     }
 }

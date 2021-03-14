@@ -11,8 +11,10 @@ public class GizmosDrawer : MonoBehaviour
     public ArraySO loadedArray;
     private ArraySO oldAr;
     public GameObject gizmoPref;
+    public bool loop;
+    public bool follow;
 
-    private List<GameObject> Spawned;
+    public List<GameObject> Spawned = new List<GameObject>();
 
     void OnSceneGUI()
     {
@@ -21,10 +23,21 @@ public class GizmosDrawer : MonoBehaviour
             SceneView.RepaintAll();
         }
     }
+
     public void sel(int i)
-    {
-        
+    {        
         Selection.activeGameObject = Spawned[i];
+    }
+
+    public void Redo()
+    {
+        deleteObjectList();
+        for (int i2 = Spawned.Count; i2 < loadedArray.WaypointList.Count; i2++)
+        {
+            GameObject test = Instantiate(gizmoPref, loadedArray.WaypointList[i2].Coords, Quaternion.identity);
+            test.name = loadedArray.WaypointList[i2].name;
+            Spawned.Add(test);
+        }
     }
 
     [InitializeOnLoadMethod]
@@ -35,7 +48,7 @@ public class GizmosDrawer : MonoBehaviour
 
     private static void OnUpdate()
     {
-        //
+        
         if (GameObject.FindObjectOfType<GizmosDrawer>() != null)
         {
             GizmosDrawer myComponent = GameObject.FindObjectOfType<GizmosDrawer>().GetComponent<GizmosDrawer>();
@@ -48,10 +61,24 @@ public class GizmosDrawer : MonoBehaviour
 
     public void OnDrawGizmos()
     {
-        if (oldAr != loadedArray)
+        if(loadedArray == null)
         {
-            deleteObjectList();
+            foreach (GameObject go in Spawned)
+            {
+                try
+                {
+                    DestroyImmediate(go);
+                }
+                catch { }
+            }
         }
+        foreach(GameObject go in Spawned)
+        {
+            //go.GetComponent<DrawSphereGizmo>().followMouse = follow;
+        }
+        if (loadedArray == null) { return; }
+
+        if (oldAr != loadedArray) { deleteObjectList(); }
 
         for (int i = 0; i < Spawned.Count; i++)
         {
@@ -61,10 +88,9 @@ public class GizmosDrawer : MonoBehaviour
             }
         }
 
-        if(Spawned.Count > loadedArray.WaypointList.Count)
-        {
-            deleteObjectList();
-        }
+        
+
+        if (Spawned.Count > loadedArray.WaypointList.Count) { deleteObjectList(); }
 
         for (int i = Spawned.Count; i < loadedArray.WaypointList.Count; i++)
         {
@@ -86,14 +112,9 @@ public class GizmosDrawer : MonoBehaviour
         for (var i = 1; i < loadedArray.WaypointList.Count; i++)
         {
             Debug.DrawLine(loadedArray.WaypointList[i - 1].Coords, loadedArray.WaypointList[i].Coords, Color.red);
-        }
-
-        for (int i = 0; i < Spawned.Count; i++)
-        {
-            if (loadedArray.WaypointList[i] != null)
+            if (loop)
             {
-                loadedArray.WaypointList[i].Coords = Spawned[i].transform.position;
-                SceneView.RepaintAll();
+                Debug.DrawLine(loadedArray.WaypointList[0].Coords, loadedArray.WaypointList[loadedArray.WaypointList.Count - 1].Coords, Color.red);
             }
         }
 
@@ -104,15 +125,26 @@ public class GizmosDrawer : MonoBehaviour
             deleteObjectList();
         }
 
+        for (int i = 0; i < Spawned.Count; i++)
+        {
+            if (loadedArray.WaypointList[i] != null)
+            {
+                loadedArray.WaypointList[i].Coords = Spawned[i].transform.position;
+            }
+        }
+
         EditorUtility.SetDirty(loadedArray);
         oldAr = loadedArray;
+        SceneView.RepaintAll();
     }
 
     private void deleteObjectList()
     {
-        foreach (GameObject go in Spawned)
-        {
-            DestroyImmediate(go);
+        if(Spawned.Count != 0) { 
+            foreach (GameObject go in Spawned)
+            {
+                DestroyImmediate(go);
+            }
         }
         Spawned.Clear();
     }
