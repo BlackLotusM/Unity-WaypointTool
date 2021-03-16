@@ -13,39 +13,15 @@ MonoBehaviour:
   m_Name: test
   m_EditorClassIdentifier: 
   WaypointList:
-  - name: test1
-    Coords: {x: 4.2, y: -2.4725502, z: -13.264719}
-  - name: test25
-    Coords: {x: 20.5, y: -2.4725502, z: -15.6}
-  - name: test26
-    Coords: {x: 21.343147, y: -2.4725502, z: -37.920727}
   - name: Waypoint0
-    Coords: {x: -26.51586, y: -2.4725502, z: -33.456005}
+    Coords: {x: 0, y: 0, z: 0}
   - name: Waypoint1
-    Coords: {x: -19.85392, y: -2.4725502, z: -10.8322525}
+    Coords: {x: -32.767265, y: -0.75, z: -34.545868}
   - name: Waypoint2
-    Coords: {x: -30.35223, y: -2.4725502, z: -15.439535}
+    Coords: {x: -29.435726, y: -0.75, z: 5.8780084}
   - name: Waypoint3
-    Coords: {x: -36.929413, y: -2.4725502, z: -7.076776}
+    Coords: {x: 2.4568481, y: -0.75, z: 40.657944}
   - name: Waypoint4
-    Coords: {x: -23.371933, y: -2.4725502, z: 5.06267}
+    Coords: {x: 14.294237, y: -0.61, z: -25.006077}
   - name: Waypoint5
-    Coords: {x: 1.252945, y: -2.4725502, z: 16.9}
-  - name: Waypoint6
-    Coords: {x: 9.8, y: -2.4725502, z: 5.3}
-  - name: Waypoint7
-    Coords: {x: 20.7, y: -2.4725502, z: 2.67}
-  - name: Waypoint8
-    Coords: {x: 16, y: -2.4725502, z: -3.53}
-  - name: Waypoint9
-    Coords: {x: 6.6, y: -2.4725502, z: -5.95}
-  - name: Waypoint10
-    Coords: {x: 16, y: -2.4725502, z: -3.53}
-  - name: Waypoint11
-    Coords: {x: 16, y: -2.4725502, z: -3.53}
-  - name: Waypoint12
-    Coords: {x: 16, y: -2.4725502, z: -3.53}
-  - name: Waypoint13
-    Coords: {x: 0, y: 0, z: 0}
-  - name: Waypoint14
-    Coords: {x: 0, y: 0, z: 0}
+    Coords: {x: -16.470928, y: -0.75, z: -37.57248}
