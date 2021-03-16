@@ -18,9 +18,9 @@ public class GizmosDrawer : MonoBehaviour
     private GameObject aiBoy;
     private ArraySO oldAr;
     private NavMeshPath path, pathLoop;
- 
+
     public void sel(int i)
-    {        
+    {
         Selection.activeGameObject = Spawned[i];
     }
 
@@ -32,7 +32,7 @@ public class GizmosDrawer : MonoBehaviour
 
     private static void OnUpdate()
     {
-        
+
         if (GameObject.FindObjectOfType<GizmosDrawer>() != null)
         {
             GizmosDrawer myComponent = GameObject.FindObjectOfType<GizmosDrawer>().GetComponent<GizmosDrawer>();
@@ -82,15 +82,19 @@ public class GizmosDrawer : MonoBehaviour
             t.transform.SetParent(this.transform);
         }
 
-        if (aiBoy == null)
+        if (aiBoy == null && !GameObject.FindObjectOfType<Patrol>().gameObject)
         {
             GameObject t = Instantiate(aiBoyPrefab);
             t.transform.SetParent(this.gameObject.transform);
             aiBoy = t;
-            
+
         }
         else
         {
+            if (aiBoy == null)
+            {
+                aiBoy = GameObject.FindObjectOfType<Patrol>().gameObject;
+            }
             aiBoy.GetComponent<Patrol>().points = loadedArray;
         }
 
@@ -116,7 +120,7 @@ public class GizmosDrawer : MonoBehaviour
 
         for (var i = 1; i < loadedArray.WaypointList.Count; i++)
         {
-            
+
             if (navmesh)
             {
                 if (path == null)
@@ -151,7 +155,7 @@ public class GizmosDrawer : MonoBehaviour
             }
         }
 
-        if(loadedArray.WaypointList.Count != Spawned.Count)
+        if (loadedArray.WaypointList.Count != Spawned.Count)
         {
             deleteObjectList();
         }
@@ -190,7 +194,8 @@ public class GizmosDrawer : MonoBehaviour
 
     private void deleteObjectList()
     {
-        if(Spawned.Count != 0) { 
+        if (Spawned.Count != 0)
+        {
             foreach (GameObject go in Spawned)
             {
                 DestroyImmediate(go);
