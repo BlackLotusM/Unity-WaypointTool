@@ -82,7 +82,20 @@ public class GizmosDrawer : MonoBehaviour
             t.transform.SetParent(this.transform);
         }
 
-        if (aiBoy == null && !GameObject.FindObjectOfType<Patrol>().gameObject)
+        try
+        {
+            if (aiBoy == null)
+            {
+                aiBoy = GameObject.FindObjectOfType<Patrol>().gameObject;
+            }
+        }
+        catch
+        {
+
+        }
+
+
+        if (aiBoy == null)
         {
             GameObject t = Instantiate(aiBoyPrefab);
             t.transform.SetParent(this.gameObject.transform);
