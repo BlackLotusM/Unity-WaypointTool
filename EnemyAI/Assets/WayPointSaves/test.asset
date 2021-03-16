@@ -16,7 +16,7 @@ MonoBehaviour:
   - name: Waypoint0
     Coords: {x: 0, y: 0, z: 0}
   - name: Waypoint1
-    Coords: {x: 5.698806, y: -0.75, z: 36.989346}
+    Coords: {x: 3.7652225, y: -0.75, z: 42.028336}
   - name: Waypoint2
     Coords: {x: -10.676949, y: -0.75, z: 44.830193}
   - name: Waypoint3
